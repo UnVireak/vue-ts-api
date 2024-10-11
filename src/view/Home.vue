@@ -7,17 +7,36 @@ export default defineComponent({
   name: "Dashboard",
   data(){
     return{
-      data:[]
+      data:[] as any[],
     }
   },
   async mounted() {
     const admin = useStore();
     await admin.getHistory();
     this.data = admin.listHistory;
-
     //ti2
     useStore().getHistory()
     this.data = useStore().listHistory
+  },
+  methods: {
+    async deleteItem(chatId: string) {
+      const admin = useStore();
+      const fixedUserId = 206; 
+
+      console.log('Attempting to delete chat with ID:', chatId); 
+      await admin.deleteHistory(fixedUserId, chatId); 
+
+      // Update local data after deletion
+      this.data = this.data.filter((item: any) => item.id !== chatId);
+    }
+  },
+  watch: {
+    '$store.listHistory': {
+      handler(newValue) {
+        this.data = newValue;
+      },
+      deep: true,
+    },
   },
 })
 </script>
@@ -50,6 +69,7 @@ export default defineComponent({
           <th scope="col">ID</th>
           <th scope="col">Questions</th>
           <th scope="col">Images</th>
+          <th scope="col">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -57,10 +77,15 @@ export default defineComponent({
           <td>{{ item.id }}</td>
           <td>{{ item.question }}</td>
           <td> <img :src="item.image" alt="Image" style="width: 100px; height: auto;" /></td>
+          <td>
+            <!-- Delete Button -->
+            <button @click="deleteItem(item.id)" class="btn btn-danger">Delete</button>
+          </td>
         </tr>
       </tbody>
     </table>
   </div>
+  
 </template>
 
 <style scoped>
